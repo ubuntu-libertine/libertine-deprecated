@@ -48,7 +48,7 @@ Page {
 		}
 		Action {
 		    text: "Switch Container"
-		    onTriggered: print(text)
+		    onTriggered: mainView.state = "CONTAINERS_VIEW"
 		}
 	    }
 	}

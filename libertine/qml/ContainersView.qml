@@ -38,7 +38,7 @@ Page {
 
     UbuntuListView {
         model: containerConfig.getContainers()
-        delegate: ListItem.Standard {
+        delegate: Text {
             text: modelData.container.name
         }
     }
