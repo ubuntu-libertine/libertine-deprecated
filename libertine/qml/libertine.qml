@@ -72,10 +72,10 @@ MainView {
             }
         },
         State {
-            name: "PREPARE_CONTAINER"
+            name: "CONTAINERS_VIEW"
             PropertyChanges {
                 target:   pageStack
-                pageName: "PreparingContainerView.qml"
+                pageName: "ContainersView.qml"
             }
         },
         State {
