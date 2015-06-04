@@ -21,21 +21,37 @@ import U1db 1.0 as U1db
 
 
 Item {
-    U1db.Database {
-        id: containerConfigDB
-        path: "container.config.db"
+
+    U1db.Index {
+        id: byContainerId
+        database: configDB
+        expression: [ "container" ]
     }
 
-    U1db.Document {
-        id: containers
-        database: containerConfigDB
-        docId: "Containers"
+    U1db.Query {
+        id: containerQuery
+        index: byContainerId
+        query: ["*"]
     }
 
-    function are_containers_available() {
-        var documentIds = {}
+    function getContainers() {
+        return containerQuery.results
+    }
 
-        documentIds = containerConfigDB.listDocs()
-        return documentIds.length > 0
+    function areContainersAvailable() {
+        var containers = getContainers()
+        return containers.length > 0
+    }
+
+    function addNewContainer(imageSource) {
+        print("addNewContainer(id='" + imageSource.id + "', '" + imageSource.name + "')")
+        var newConfig = {
+            "container": {
+                "id": imageSource.id,
+                "name": imageSource.name,
+                "status": "NEW"
+            }
+        }
+        configDB.putDoc(newConfig)
     }
 }

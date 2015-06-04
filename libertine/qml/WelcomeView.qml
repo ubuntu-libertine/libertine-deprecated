@@ -90,7 +90,7 @@ Page {
             enabled: imageSelector.selectedImageSource
             onClicked: {
                 mainView.state = "PREPARE_CONTAINER"
-                print("==smw> installButton.onClicked " + imageSelector.selectedImageSource.name)
+                containerConfig.addNewContainer(imageSelector.selectedImageSource)
             }
 
         }
