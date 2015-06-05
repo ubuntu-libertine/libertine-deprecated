@@ -27,7 +27,7 @@ MainView {
     applicationName: "libertine"
     width:  units.gu(90)
     height: units.gu(75)
-    property string currentContainerId: ""
+    property var currentContainer: undefined
 
     /**
      * A local data store for the current Libertine configuration.
@@ -48,10 +48,12 @@ MainView {
 
         Component.onCompleted: {
             push(Qt.resolvedUrl(pageName))
-            if (containerConfig.areContainersAvailable())
-            {
-                mainView.currentContainerId = "demo"
-                pageName = "HomeView.qml"
+            mainView.currentContainer = containerConfig.getDefaultContainer()
+            if (mainView.currentContainer) {
+                state = "HOMEPAGE"
+            }
+            else if (containerConfig.hasContainers()) {
+                state = "CONTAINERS_VIEW"
             }
         }
 

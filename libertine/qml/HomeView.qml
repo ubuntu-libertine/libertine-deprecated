@@ -61,7 +61,7 @@ Page {
     ListView {
         model: containerApps.appsForContainer
         delegate: Text {
-            text: mainView.currentContainerId
+            text: mainView.currentContainer.name
         }
     }
 }

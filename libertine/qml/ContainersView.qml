@@ -39,7 +39,7 @@ Page {
     UbuntuListView {
         model: containerConfig.getContainers()
         delegate: Text {
-            text: modelData.container.name
+            text: modelData.name
         }
     }
 }
