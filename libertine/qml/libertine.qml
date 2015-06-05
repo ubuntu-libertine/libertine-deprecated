@@ -41,25 +41,38 @@ MainView {
         id: containerConfig
     }
 
+    WelcomeView {
+        id: welcomeView
+        visible: false
+    }
+
+    ContainersView {
+        id: containersView
+        visible: false
+    }
+
+    HomeView {
+        id: homeView
+        visible: false
+    }
+
+    AppAddView {
+        id: appAddView
+        visible: false
+    }
+
     PageStack {
         id: pageStack
         state: "WELCOME"
-        property string pageName: "WelcomeView.qml"  // default initial state
+        property var page: welcomeView
 
         Component.onCompleted: {
-            push(Qt.resolvedUrl(pageName))
-            mainView.currentContainer = containerConfig.getDefaultContainer()
-            if (mainView.currentContainer) {
-                state = "HOMEPAGE"
-            }
-            else if (containerConfig.hasContainers()) {
-                state = "CONTAINERS_VIEW"
-            }
+            push(page)
         }
 
-        onPageNameChanged: {
+        onPageChanged: {
             pop();
-            push(Qt.resolvedUrl(pageName))
+            push(page)
         }
     }
 
@@ -69,30 +82,40 @@ MainView {
         State {
             name: "WELCOME"
             PropertyChanges {
-                target:   pageStack
-                pageName: "WelcomeView.qml"
+                target: pageStack
+                page:   welcomeView
             }
         },
         State {
             name: "CONTAINERS_VIEW"
             PropertyChanges {
-                target:   pageStack
-                pageName: "ContainersView.qml"
+                target: pageStack
+                page:   containersView
             }
         },
         State {
             name: "HOMEPAGE"
             PropertyChanges {
-                target:   pageStack
-                pageName: "HomeView.qml"
+                target: pageStack
+                page:   homeView
             }
         },
         State {
             name: "ADD_APPS"
             PropertyChanges {
-                target:   pageStack
-                pageName: "AppAddView.qml"
+                target: pageStack
+                page:   appAddView
             }
         }
     ]
+
+    Component.onCompleted: {
+        mainView.currentContainer = containerConfig.getDefaultContainer()
+        if (mainView.currentContainer) {
+            state = "HOMEPAGE"
+        }
+        else if (containerConfig.hasContainers()) {
+            state = "CONTAINERS_VIEW"
+        }
+    }
 }
