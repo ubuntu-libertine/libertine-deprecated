@@ -38,7 +38,7 @@ Page {
 
     Component {
         id: containerDelegate
-        Text {
+        ListItem.Standard {
             text: modelData.name
         }
     }
