@@ -55,19 +55,21 @@ Item {
         var containerId = imageSource.id
         var containerName = imageSource.name
         var bis = 0
+        var max = 0
         var re = /^(\w*)(?:-(\d+))?$/
         var containers = getContainers()
         for (var i in containers) {
             var match = re.exec(containers[i].containerId)
             if (match && match[1] === imageSource.id) {
+                ++bis
                 var val = Number(match[2])
                 if (val != NaN && val > 0) {
-                    bis = (val > bis ? val : bis)
+                    max = Math.max(val, max)
                 }
-                ++bis
             }
         }
         if (bis > 0) {
+            bis = Math.max(bis, max+1)
             containerId += "-" + bis
             containerName += " (" + bis + ")"
         }

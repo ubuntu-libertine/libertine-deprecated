@@ -36,10 +36,16 @@ Page {
         }
     ]
 
-    UbuntuListView {
-        model: containerConfig.getContainers()
-        delegate: Text {
+    Component {
+        id: containerDelegate
+        Text {
             text: modelData.name
         }
+    }
+
+    UbuntuListView {
+        anchors.fill: parent
+        model: containerConfig.getContainers()
+        delegate: containerDelegate
     }
 }
