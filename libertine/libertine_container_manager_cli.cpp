@@ -1,3 +1,22 @@
+/**
+ * @file libertine_container_manager_cli.cpp
+ * @brief The CLI manager Libertine Containers
+ */
+/*
+ * Copyright 2015 Canonical Ltd
+ *
+ * Libertine is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3, as published by the
+ * Free Software Foundation.
+ *
+ * Libertine is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "libertine_lxc_manager_wrapper.h"
 #include "ContainerConfigList.h"
 #include "libertine/LibertineConfig.h"
@@ -19,8 +38,6 @@ int main (int argc, char *argv[])
   app.setApplicationName(LIBERTINE_APPLICATION_NAME);
 
   containers = new ContainerConfigList(&config);
-
-  std::cout << "Default container is " << containers->default_container_id().toStdString().c_str() << std::endl;
 
   commandlineParser.setApplicationDescription("Command-line tool to manage sandboxes for running legacy DEB-packaged X11-based applications");
   commandlineParser.addHelpOption();
@@ -44,10 +61,12 @@ int main (int argc, char *argv[])
 
   if (commandlineParser.isSet("create"))
   {
-    if (argc > 2)
+    if (argc != 2)
     {
-      printf("Too many arguments\n");
+      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
     }
+
     QVariantMap image;
     image.insert("id", "wily");
     image.insert("name", "Ubuntu 'Wily Werewolf'");
@@ -57,6 +76,12 @@ int main (int argc, char *argv[])
 
   if (commandlineParser.isSet("destroy"))
   {
+    if (argc != 3)
+    {
+      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
+    }
+
     if (commandlineParser.isSet("name"))
     {
       const QString container_name = commandlineParser.value("name");
@@ -64,12 +89,19 @@ int main (int argc, char *argv[])
     }
     else
     {
-      printf("You must specify a container name when using the destroy option!\n");
+      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the destroy option!").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
     }
   }
 
   if (commandlineParser.isSet("install-package"))
   {
+    if (argc != 3)
+    {
+      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
+    }
+
     if (commandlineParser.isSet("name"))
     {
       const QString package_name = commandlineParser.value("install-package");
@@ -78,20 +110,41 @@ int main (int argc, char *argv[])
     }
     else
     {
-      printf("You must specify a container name when using the install-package option!\n");
+      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the install-package option!").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
     }
   }
 
   if (commandlineParser.isSet("update"))
   {
+    if (argc != 3)
+    {
+      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
+    }
 
+    if (commandlineParser.isSet("name"))
+    {
+      const QString container_name = commandlineParser.value("name");
+      printf("Update is set w/ value %s\n", container_name.toStdString().c_str());
+    }
+    else
+    {
+      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the update option!").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
+    }
   }
 
   if (commandlineParser.isSet("list"))
   {
+    if (argc != 2)
+    {
+      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
+      commandlineParser.showHelp(-1);
+    }
+
     int count = containers->size();
     QVariant name;
-    printf("size is %d\n", count);
 
     for (int i = 0; i < count; ++i)
     {
