@@ -41,116 +41,88 @@ int main (int argc, char *argv[])
 
   commandlineParser.setApplicationDescription("Command-line tool to manage sandboxes for running legacy DEB-packaged X11-based applications");
   commandlineParser.addHelpOption();
-  commandlineParser.addOptions({
-      {{"c", "create"},
-        QCoreApplication::translate("main", "Create a new Libertine container.")},
-      {{"d", "destroy"},
-        QCoreApplication::translate("main", "Destroy an existing Libertine container.")},
-      {{"i", "install-package"},
-        QCoreApplication::translate("main", "Install a specified Debian package in the Libertine container."),
-        QCoreApplication::translate("main", "package_name")},
-      {{"u", "update"},
-        QCoreApplication::translate("main", "Update the packages in the Libertine container.")},
-      {{"l", "list"},
-        QCoreApplication::translate("main", "List all available Libertine containers.")},
-      {{"n", "name"},
-        QCoreApplication::translate("main", "Name of the container to perform the action on."),
-        QCoreApplication::translate("main", "container_name")}
-  });
-  commandlineParser.process(app);
 
-  if (commandlineParser.isSet("create"))
+  commandlineParser.addPositionalArgument("command", "[create | destroy | install-package | update | list]");
+
+  commandlineParser.parse(QCoreApplication::arguments());
+
+  const QStringList args = commandlineParser.positionalArguments();
+  const QString command = args.isEmpty() ? QString() : args.first();
+
+  if (command == "create")
   {
-    if (argc != 2)
-    {
-      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
-      commandlineParser.showHelp(-1);
-    }
-
-    QVariantMap image;
-    image.insert("id", "wily");
-    image.insert("name", "Ubuntu 'Wily Werewolf'");
-    containers->addNewContainer(image);
-    printf("Create is set\n");
+    commandlineParser.clearPositionalArguments();
+    commandlineParser.addPositionalArgument("create", "Create a new Libertine container.");
+    commandlineParser.process(app);
   }
-
-  if (commandlineParser.isSet("destroy"))
+  else if (command == "destroy")
   {
-    if (argc != 3)
-    {
-      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
-      commandlineParser.showHelp(-1);
-    }
+    commandlineParser.clearPositionalArguments();
+    commandlineParser.addPositionalArgument("destroy", QCoreApplication::translate("main", "Destroy an existing Libertine container."));
+    commandlineParser.addOption({{"n", "name"}, QCoreApplication::translate("main", "Name of container"), "container_name"});
+
+    commandlineParser.process(app);
 
     if (commandlineParser.isSet("name"))
     {
-      const QString container_name = commandlineParser.value("name");
-      printf("Destroy is set w/ value %s\n", container_name.toStdString().c_str());
+      const QString container_id = commandlineParser.value("name");
     }
     else
     {
-      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the destroy option!").toStdString().c_str() << std::endl;
+      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the destroy command!").toStdString().c_str() << std::endl;
       commandlineParser.showHelp(-1);
     }
   }
-
-  if (commandlineParser.isSet("install-package"))
+  else if (command == "install-package")
   {
-    if (argc != 3)
-    {
-      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
-      commandlineParser.showHelp(-1);
-    }
+    commandlineParser.clearPositionalArguments();
+    commandlineParser.addPositionalArgument("install-package", QCoreApplication::translate("main", "Install a package in an existing Libertine container."));
 
-    if (commandlineParser.isSet("name"))
+    commandlineParser.addOption({{"n", "name"}, QCoreApplication::translate("main", "Name of container"), "container_name"});
+    commandlineParser.addOption({{"p", "package"}, QCoreApplication::translate("main", "Name of package to install"), "package_name"});
+
+    commandlineParser.process(app);
+
+    if (commandlineParser.isSet("name") && commandlineParser.isSet("package"))
     {
       const QString package_name = commandlineParser.value("install-package");
       const QString container_name = commandlineParser.value("name");
-      printf("install-package is set w/ values %s & %s\n", package_name.toStdString().c_str(), container_name.toStdString().c_str());
     }
     else
     {
-      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the install-package option!").toStdString().c_str() << std::endl;
+      std::cout << QCoreApplication::translate("main", "You must specify a container name & package name when using the install-package command!").toStdString().c_str() << std::endl;
       commandlineParser.showHelp(-1);
     }
   }
-
-  if (commandlineParser.isSet("update"))
+  else if (command == "update")
   {
-    if (argc != 3)
-    {
-      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
-      commandlineParser.showHelp(-1);
-    }
+    commandlineParser.clearPositionalArguments();
+    commandlineParser.addPositionalArgument("update", QCoreApplication::translate("main", "Update packages in an existing Libertine container."));
+
+    commandlineParser.addOption({{"n", "name"}, QCoreApplication::translate("main", "Name of container"), "container_name"});
+
+    commandlineParser.process(app);
 
     if (commandlineParser.isSet("name"))
     {
-      const QString container_name = commandlineParser.value("name");
-      printf("Update is set w/ value %s\n", container_name.toStdString().c_str());
+      const QString container_id = commandlineParser.value("name");
     }
     else
     {
-      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the update option!").toStdString().c_str() << std::endl;
+      std::cout << QCoreApplication::translate("main", "You must specify a container name when using the update command!").toStdString().c_str() << std::endl;
       commandlineParser.showHelp(-1);
     }
   }
-
-  if (commandlineParser.isSet("list"))
+  else if (command == "list")
   {
-    if (argc != 2)
-    {
-      std::cout << QCoreApplication::translate("main", "Wrong number of arguments specified.").toStdString().c_str() << std::endl;
-      commandlineParser.showHelp(-1);
-    }
-
-    int count = containers->size();
-    QVariant name;
-
-    for (int i = 0; i < count; ++i)
-    {
-      name = containers->data(containers->index(i, 0), (int)ContainerConfigList::DataRole::ContainerName);
-      printf("name is %s\n", name.toString().toStdString().c_str());
-    }
+    commandlineParser.clearPositionalArguments();
+    commandlineParser.addPositionalArgument("list", "List all existing Libertine containers.");
+    commandlineParser.process(app);
+  }
+  else
+  {
+    std::cout << QCoreApplication::translate("main", "Invalid command specified!").toStdString().c_str() << std::endl;
+    commandlineParser.showHelp(-1);
   }
 
   return 0;
