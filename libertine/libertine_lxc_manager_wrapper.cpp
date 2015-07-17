@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include "libertine_lxc_manager_wrapper.h"
 
-const char* LIBERTINE_PYTHON_MODULE = "LibertineContainerTools";
+const char* LIBERTINE_PYTHON_MODULE = "Libertine";
 const char* LIBERTINE_CONTAINER_CLASS = "LibertineContainer";
 
 // Methods availaible from the LibertineContainer Python class
