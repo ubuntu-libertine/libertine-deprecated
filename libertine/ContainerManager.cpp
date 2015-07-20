@@ -103,6 +103,10 @@ run()
       installPackage(container_id_, data_);
       break;
 
+    case ContainerAction::Remove:
+      removePackage(container_id_, data_);
+      break;
+
     case ContainerAction::Update:
       updateContainer(container_id_);
       break;
@@ -141,10 +145,32 @@ destroyContainer(QString const& container_id)
 void ContainerManagerWorker::
 installPackage(QString const& container_id, QString const& package_name)
 {
+  char error_msg[1024];
+  char *buff_ptr = error_msg;
+  bool result;
+
   LibertineManagerWrapper manager(container_id.toStdString().c_str());
 
-  manager.InstallPackageInContainer(package_name.toStdString().c_str());
+  result = manager.InstallPackageInContainer(package_name.toStdString().c_str(), &buff_ptr);
 
+  emit finishedInstall(result, QString(error_msg));
+  emit finished();
+  quit();
+}
+
+
+void ContainerManagerWorker::
+removePackage(QString const& container_id, QString const& package_name)
+{
+  char error_msg[1024];
+  char *buff_ptr = error_msg;
+  bool result;
+
+  LibertineManagerWrapper manager(container_id.toStdString().c_str());
+
+  result = manager.RemovePackageInContainer(package_name.toStdString().c_str(), &buff_ptr);
+
+  emit finishedRemove(result, QString(error_msg));
   emit finished();
   quit();
 }

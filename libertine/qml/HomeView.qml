@@ -19,7 +19,6 @@
 import Libertine 1.0
 import QtQuick 2.4
 import Ubuntu.Components 1.2
-import Ubuntu.Components.ListItems 1.0 as ListItem
 import Ubuntu.Components.Popups 1.0
 
 
@@ -64,22 +63,55 @@ Page {
 	}
     }
 
-    ContainerApps {
-        id: containerApps
-    }
-
-    ListView {
-        model: containerApps.appsForContainer
-        delegate: Text {
-            text: mainView.currentContainer.name
+    UbuntuListView {
+        anchors.fill: parent
+        model: containerAppsList
+        delegate: ListItem {
+            Label {
+                text: packageName
+            }
+            leadingActions: ListItemActions {
+                actions: [
+                    Action {
+                        iconName: "delete"
+                        text: i18n.tr("delete")
+                        description: i18n.tr("Remove Package")
+                        onTriggered: {
+                            removePackage(packageName)
+                            containerAppsList.removeApp(mainView.currentContainer, packageName)
+                        }
+                    }
+                ]
+            }
+            trailingActions: ListItemActions {
+                actions: [
+                    Action {
+                        iconName: "info"
+                        text: i18n.tr("info")
+                        description: i18n.tr("Package Info")
+                        onTriggered: {
+                            console.log("info for package " + packageName)
+                        }
+                    }
+                ]
+            }
         }
     }
 
     function updateContainer() {
-          var comp = Qt.createComponent("ContainerManager.qml")
-          var worker = comp.createObject()
-          worker.containerAction = ContainerManagerWorker.Update
-          worker.containerId = mainView.currentContainer
-          worker.start()
+        var comp = Qt.createComponent("ContainerManager.qml")
+        var worker = comp.createObject()
+        worker.containerAction = ContainerManagerWorker.Update
+        worker.containerId = mainView.currentContainer
+        worker.start()
+    }
+
+    function removePackage(packageName) {
+        var comp = Qt.createComponent("ContainerManager.qml")
+        var worker = comp.createObject()
+        worker.containerAction = ContainerManagerWorker.Remove
+        worker.containerId = mainView.currentContainer
+        worker.data = packageName
+        worker.start()
     }
 }

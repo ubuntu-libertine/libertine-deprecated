@@ -26,6 +26,7 @@
 #include <QtCore/QList>
 
 
+class ContainerApps;
 class ContainerConfig;
 class LibertineConfig;
 
@@ -94,9 +95,24 @@ public:
   Q_INVOKABLE bool
   deleteContainer(QString const& container_id);
 
-  Q_INVOKABLE bool
+  Q_INVOKABLE void
   addNewApp(QString const& container_id,
             QString const& package_name);
+
+  void
+  removeApp(QString const& container_id,
+            int index);
+
+  QList<ContainerApps*> *
+  getAppsForContainer(QString const& container_id);
+
+  Q_INVOKABLE bool
+  isAppInstalled(QString const& container_id,
+                 QString const& package_name);
+
+  int
+  getAppIndex(QString const& container_id,
+              QString const& package_name);
 
   QJsonObject
   toJson() const;
@@ -163,6 +179,9 @@ private:
 
   void
   save_container_config_list();
+
+  int
+  getContainerIndex(QString const& container_id);
 
 private:
   LibertineConfig const* config_;

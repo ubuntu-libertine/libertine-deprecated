@@ -134,56 +134,127 @@ bool ContainerConfigList::
 deleteContainer(QString const& container_id)
 {
   bool found = false;
+  int index = -1;
 
-  for (int i = 0; i < rowCount(); ++i)
+  index = getContainerIndex(container_id);
+
+  if (index > -1)
   {
-    if (configs_[i]->container_id() == container_id)
+    found = true;
+
+    beginRemoveRows(QModelIndex(), index, index);
+    configs_.removeAt(index);
+
+    if ((default_container_id_ == container_id) && !configs_.empty())
     {
-      found = true;
-
-      beginRemoveRows(QModelIndex(), i, i);
-      configs_.removeAt(i);
-
-      if ((default_container_id_ == container_id) && !configs_.empty())
-      {
-        default_container_id_ = configs_.front()->container_id();
-      }
-      else
-      {
-        default_container_id_ = "";
-      }
-
-      save_container_config_list();
-      endRemoveRows();
-      break;
+      default_container_id_ = configs_.front()->container_id();
     }
+    else if (configs_.empty())
+    {
+      default_container_id_ = "";
+    }
+
+    save_container_config_list();
+    endRemoveRows();
   }
+
   return found;
 }
 
 
-bool ContainerConfigList::
+void ContainerConfigList::
 addNewApp(QString const& container_id, QString const& package_name)
 {
-  for (int i = 0; i < rowCount(); ++i)
+  for (auto const& config: configs_)
   {
-    if (configs_[i]->container_id() == container_id)
+    if (config->container_id() == container_id)
     {
-      for (auto const& app: configs_[i]->container_apps())
-      {
-        if (app->package_name() == package_name)
-        {
-          return false;
-        }
-      }
-      configs_[i]->container_apps().append(new ContainerApps(package_name, ContainerApps::AppStatus::New, this));
+      config->container_apps().append(new ContainerApps(package_name, ContainerApps::AppStatus::New, this));
 
       save_container_config_list();
 
-      return true;
+      break;
     }
   }
+}
+
+
+void ContainerConfigList::
+removeApp(QString const& container_id, int index)
+{
+  int container_index = getContainerIndex(container_id);
+
+  configs_.at(container_index)->container_apps().removeAt(index);
+
+  save_container_config_list();
+}
+
+
+QList<ContainerApps*> * ContainerConfigList::
+getAppsForContainer(QString const& container_id)
+{
+  for (auto const& config: configs_)
+  {
+    if (config->container_id() == container_id)
+    {
+      return &(config->container_apps());
+    }
+  }
+  return nullptr;
+}
+
+
+bool ContainerConfigList::
+isAppInstalled(QString const& container_id, QString const& package_name)
+{
+  for (auto const& config: configs_)
+  {
+    if (config->container_id() == container_id)
+    {
+      for (auto const& app: config->container_apps())
+      {
+        if (app->package_name() == package_name)
+        {
+          return true;
+        }
+      }
+    }
+  }
+
   return false;
+}
+
+
+int ContainerConfigList::
+getContainerIndex(QString const& container_id)
+{
+  for (int i = 0; i < rowCount(); ++i)
+  {
+    if (configs_.at(i)->container_id() == container_id)
+    {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+
+int ContainerConfigList::
+getAppIndex(QString const& container_id, QString const& package_name)
+{
+  int container_index = getContainerIndex(container_id);
+  auto const& apps = configs_.at(container_index)->container_apps();
+
+  for (int i = 0; i < apps.count(); ++i)
+  {
+    if (apps.at(i)->package_name() == package_name)
+    {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 
