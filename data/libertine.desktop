@@ -3,7 +3,9 @@ Version=1.0
 Name="Libertine"
 Comment"Legacy Application Sandbox"
 Exec=libertine
-Terminal-false
+Terminal=false
 Type=Application
+Icon=/usr/share/libertine/libertine_64.png
 Catgories=
 GenericName="Application Sandbox"
+X-Ubuntu-Touch=true
