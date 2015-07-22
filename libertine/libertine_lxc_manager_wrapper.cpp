@@ -30,6 +30,7 @@ const char* PY_CREATE_LIBERTINE_CONFIG = "create_libertine_config";
 const char* PY_UPDATE_LIBERTINE_CONTAINER = "update_libertine_container";
 const char* PY_INSTALL_PACKAGE_IN_CONTAINER = "install_package";
 const char* PY_REMOVE_PACKAGE_IN_CONTAINER = "remove_package";
+const char* PY_SEARCH_PACKAGE_CACHE_IN_CONTAINER = "search_package_cache";
 
 // Functions outside of the Python class that are needed
 const char* PY_LIST_LIBERTINE_CONTAINERS = "list_libertine_containers";
@@ -181,6 +182,48 @@ bool LibertineManagerWrapper::RemovePackageInContainer(const char* package_name,
     PyErr_Print();
   }
 
+  PyGILState_Release(gstate);
+
+  return success;
+}
+
+bool LibertineManagerWrapper::SearchPackageCacheInContainer(const char* search_string, char ***package_list, int *num_packages)
+{
+  bool success = true;
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject *result = PyObject_CallMethod(pInstance_, PY_SEARCH_PACKAGE_CACHE_IN_CONTAINER, "s", search_string);
+
+  if (result)
+  {
+    if (PyTuple_GetItem(result, 0) == Py_True)
+    {
+      PyObject *list;
+      char *tmp;
+
+      if (PyList_Check((list = PyTuple_GetItem(result, 1))))
+      {
+        *package_list = (char **)malloc(PyList_Size(list) * sizeof(char *));
+        *num_packages = (int)PyList_Size(list);
+
+        for (int i = 0; i < PyList_Size(list); ++i)
+        {
+          tmp = PyUnicode_AsUTF8(PyList_GetItem(list, i));
+          (*package_list)[i] = (char *)malloc((strlen(tmp) + 1));
+          strcpy((*package_list)[i], tmp);
+        }
+      }
+      Py_DECREF(list);
+    }
+    Py_DECREF(result);
+  }
+  else
+  {
+    PyErr_Print();
+  }
+  
   PyGILState_Release(gstate);
 
   return success;

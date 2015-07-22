@@ -107,6 +107,10 @@ run()
       removePackage(container_id_, data_);
       break;
 
+    case ContainerAction::Search:
+      searchPackageCache(container_id_, data_);
+      break;
+      
     case ContainerAction::Update:
       updateContainer(container_id_);
       break;
@@ -175,6 +179,33 @@ removePackage(QString const& container_id, QString const& package_name)
   quit();
 }
 
+
+void ContainerManagerWorker::
+searchPackageCache(QString const& container_id, QString const& search_string)
+{
+  char **package_list;
+  bool result;
+  int num_packages;
+  QList<QString> packageList;
+
+  LibertineManagerWrapper manager(container_id.toStdString().c_str());
+
+  result = manager.SearchPackageCacheInContainer(search_string.toStdString().c_str(), &package_list, &num_packages);
+
+  if (result)
+  {
+    for (int i = 0; i < num_packages; ++i)
+    {
+      packageList.append(QString(package_list[i]));
+      free(package_list[i]);
+    }
+    free(package_list);
+  }
+
+  emit finishedSearch(result, packageList);
+  emit finished();
+  quit();
+}
 
 void ContainerManagerWorker::
 updateContainer(QString const& container_id)

@@ -42,6 +42,7 @@ public:
     Destroy,
     Install,
     Remove,
+    Search,
     Update
   };
 
@@ -80,6 +81,7 @@ private:
   void destroyContainer(QString const& container_id);
   void installPackage(QString const& container_id, QString const& package_name);
   void removePackage(QString const& container_id, QString const& package_name);
+  void searchPackageCache(QString const& container_id, QString const& search_string);
   void updateContainer(QString const& container_id);
 
 private:
@@ -92,6 +94,7 @@ signals:
   void finishedDestroy(QString const& container_id);
   void finishedInstall(bool result, QString const& error_msg);
   void finishedRemove(bool result, QString const& error_msg);
+  void finishedSearch(bool result, QList<QString> packageList);
 };
 
 #endif /* CONTAINER_CONTAINERMANAGER_H_ */

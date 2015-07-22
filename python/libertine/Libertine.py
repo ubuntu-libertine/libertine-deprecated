@@ -141,8 +141,8 @@ def start_container_for_update(container):
     container.attach_wait(lxc.attach_run_command,
                           ["umount", "/tmp/.X11-unix"])
 
-    container.attach_wait(lxc.attach_run_command,
-                          ["apt-get", "update"])
+    #container.attach_wait(lxc.attach_run_command,
+    #                      ["apt-get", "update"])
 
     return True
 
@@ -316,3 +316,29 @@ class LibertineContainer(object):
 
         if stop_container:
             self.container.stop()
+
+    def search_package_cache(self, search_string):
+        f = io.BytesIO()
+        stop_container = False
+
+        if not self.container.running:
+            if not start_container_for_update(self.container):
+              return (False, "Container did not start")
+            stop_container = True
+
+        with output_redirector(f):
+            retval = self.container.attach_wait(lxc.attach_run_command,
+                                                ["apt-cache", "search", search_string])
+
+        lxc_output = f.getvalue().split(b'\n')
+
+        if stop_container:
+            self.container.stop()
+
+        if retval == 0:
+            package_list = []
+
+            for line in lxc_output:
+                package_list.append(line.decode())
+
+            return (True, package_list)

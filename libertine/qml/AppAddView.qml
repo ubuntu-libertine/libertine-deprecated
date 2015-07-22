@@ -27,6 +27,36 @@ Page {
     title: i18n.tr("Install Apps")
 
     Label {
+        id: searchPackageMessage
+
+        visible: false
+
+        Layout.fillWidth: true
+        wrapMode: Text.Wrap
+        horizontalAlignment: Text.AlignHCenter
+
+        text: i18n.tr("Please enter a package name to search for:")
+    }
+
+    TextField {
+        id: searchString
+
+        visible: false
+
+        anchors {
+            top: searchPackageMessage.bottom
+            horizontalCenter: parent.horizontalCenter
+            margins: units.gu(1)
+        }
+        height: units.gu(4.5)
+        width: parent.width - anchors.margins * 2
+
+        onAccepted: {
+            searchPackage(searchString.text)
+        }
+    }
+
+    Label {
         id: enterPackageMessage
 
         visible: false
@@ -35,7 +65,7 @@ Page {
         wrapMode: Text.Wrap
         horizontalAlignment: Text.AlignHCenter
 
-        text: "Please enter the exact package name of the app to install:"
+        text: i18n.tr("Please enter the exact package name of the app to install:")
     }
 
     TextField {
@@ -83,23 +113,35 @@ Page {
         Action {
 	    iconName: "search"
 	    onTriggered: {
-              if (enterPackageMessage.visible) {
-                  enterPackageMessage.visible = false;
-                  appName.visible = false;
-                  appName.text = ""
-              }
-              print("search")
+                if (enterPackageMessage.visible) {
+                    enterPackageMessage.visible = false
+                    appName.visible = false
+                    appName.text = ""
+                }
+                searchPackageMessage.visible = true
+                searchString.visible = true
+                searchString.forceActiveFocus()
+                print("search")
             }
 	},
         Action {
            iconName: "settings"
            onTriggered: {
+               if (searchPackageMessage.visible) {
+                   searchPackageMessage.visible = false
+                   searchString.visible = false
+                   searchString.text = ""
+               }
                enterPackageMessage.visible = true
                appName.visible = true
                appName.forceActiveFocus()
            }
         }
     ]
+
+    ListModel {
+        id: packageListModel
+    }
 
     function installPackage() {
         var comp = Qt.createComponent("ContainerManager.qml")
@@ -124,4 +166,30 @@ Page {
             }
         }
     }
+
+    function searchPackage(search_string) {
+        var comp = Qt.createComponent("ContainerManager.qml")
+        var worker = comp.createObject()
+        worker.containerAction = ContainerManagerWorker.Search
+        worker.containerId = mainView.currentContainer
+        worker.data = search_string
+        worker.finishedSearch.connect(finishedSearch)
+        worker.start()
+    }
+
+    function finishedSearch(result, packageList) {
+        print("finishedSearch")
+        for (var i = 0; i < packageList.length; ++i)
+        {
+            packageListModel.append({"package": packageList[i]})
+        }
+        var comp = Qt.createComponent("SearchResults.qml")
+        if( comp.status != Component.Ready )
+        {
+            if( comp.status == Component.Error )
+            console.debug("Error:"+ comp.errorString() );
+            return; // or maybe throw
+        }
+        var object = comp.createObject(appAddView, {"model": packageListModel})
+    }       
 }
