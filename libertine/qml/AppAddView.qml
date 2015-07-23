@@ -26,122 +26,166 @@ Page {
     id: appAddView
     title: i18n.tr("Install Apps")
 
-    Label {
-        id: searchPackageMessage
-
-        visible: false
-
-        Layout.fillWidth: true
-        wrapMode: Text.Wrap
-        horizontalAlignment: Text.AlignHCenter
-
-        text: i18n.tr("Please enter a package name to search for:")
-    }
-
-    TextField {
-        id: searchString
-
-        visible: false
-
+    ColumnLayout {
+        id: column
+        spacing: units.gu(2)
         anchors {
-            top: searchPackageMessage.bottom
-            horizontalCenter: parent.horizontalCenter
-            margins: units.gu(1)
+            fill: parent
         }
-        height: units.gu(4.5)
-        width: parent.width - anchors.margins * 2
 
-        onAccepted: {
-            searchPackage(searchString.text)
-        }
-    }
+        Label {
+            id: searchPackageMessage
 
-    Label {
-        id: enterPackageMessage
+            visible: false
 
-        visible: false
-
-        Layout.fillWidth: true
-        wrapMode: Text.Wrap
-        horizontalAlignment: Text.AlignHCenter
-
-        text: i18n.tr("Please enter the exact package name of the app to install:")
-    }
-
-    TextField {
-        id: appName
-
-        visible: false
-
-        anchors {
-            top: enterPackageMessage.bottom
-            horizontalCenter: parent.horizontalCenter
-            margins: units.gu(1)
-        }
-        height: units.gu(4.5)
-        width: parent.width - anchors.margins * 2
-
-        onAccepted: {
-            if (!containerConfigList.isAppInstalled(mainView.currentContainer, text)) {
-                containerAppsList.addNewApp(mainView.currentContainer, text)
-                installPackage()
-                appInstallMessage.text = i18n.tr("Installing ") + text + i18n.tr("...")
-                appInstallMessage.visible = true
-                appName.text = ""
+            anchors {
+                top: parent.top
+                left: parent.left
+                margins: units.gu(1)
             }
-            else {
-                appInstallMessage.text = i18n.tr("Package ") + text + i18n.tr(" already installed. Please try a different package name.")
-                appInstallMessage.visible = true
-                appName.text = ""
-            }  
+
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+
+            text: i18n.tr("Please enter a package name to search for:")
         }
-    }
 
-    Label {
-        id: appInstallMessage
+        TextField {
+            id: searchInput
 
-        visible: false
+            visible: false
 
-        anchors {
-            top: appName.bottom
-            margins: units.gu(3)
+            anchors {
+                top: searchPackageMessage.bottom
+                left: parent.left
+                margins: units.gu(1)
+            }
+            height: units.gu(4.5)
+            width: parent.width - anchors.margins * 2
+
+            onAccepted: {
+                packageListModel.clear()
+                listView.forceLayout()
+                searchPackage(searchInput.text)
+            }
         }
-        height: units.gu(4.5)
+
+        Label {
+            id: enterPackageMessage
+
+            visible: false
+
+            anchors {
+                top: parent.top
+                left: parent.left
+                margins: units.gu(1)
+            }
+
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+
+            text: i18n.tr("Please enter the exact package name of the app to install:")
+        }
+
+        TextField {
+            id: appName
+
+            visible: false
+
+            anchors {
+                top: enterPackageMessage.bottom
+                left: parent.left
+                margins: units.gu(1)
+            }
+            height: units.gu(4.5)
+            width: parent.width - anchors.margins * 2
+
+            onAccepted: {
+                if (!containerConfigList.isAppInstalled(mainView.currentContainer, text)) {
+                    containerAppsList.addNewApp(mainView.currentContainer, text)
+                    installPackage()
+                    appInstallMessage.text = i18n.tr("Installing ") + text + i18n.tr("...")
+                    appInstallMessage.visible = true
+                    appName.text = ""
+                }
+                else {
+                    appInstallMessage.text = i18n.tr("Package ") + text + i18n.tr(" already installed. Please try a different package name.")
+                    appInstallMessage.visible = true
+                    appName.text = ""
+                }
+            }
+        }
+
+        Label {
+            id: appInstallMessage
+
+            visible: false
+
+            anchors {
+                top: appName.bottom
+                margins: units.gu(3)
+            }
+            height: units.gu(4.5)
+        }
+
+        ListModel {
+            id: packageListModel
+        }
+
+        UbuntuListView {
+            id: listView
+            anchors {
+                top: searchInput.bottom
+                bottom: parent.bottom
+                right: parent.right
+                left: parent.left
+                topMargin: units.gu(1)
+            }
+            clip: true
+            model: packageListModel
+
+            delegate: ListItem {
+                Label {
+                    anchors {
+                        left: parent.left
+                        leftMargin: units.gu(1)
+                    }
+                    text: model.package
+                }
+            }
+        }
     }
 
     head.actions: [
         Action {
-	    iconName: "search"
-	    onTriggered: {
+            iconName: "search"
+            onTriggered: {
                 if (enterPackageMessage.visible) {
                     enterPackageMessage.visible = false
                     appName.visible = false
                     appName.text = ""
                 }
                 searchPackageMessage.visible = true
-                searchString.visible = true
-                searchString.forceActiveFocus()
-                print("search")
+                searchInput.visible = true
+                searchInput.forceActiveFocus()
             }
-	},
+        },
         Action {
-           iconName: "settings"
-           onTriggered: {
-               if (searchPackageMessage.visible) {
-                   searchPackageMessage.visible = false
-                   searchString.visible = false
-                   searchString.text = ""
-               }
-               enterPackageMessage.visible = true
-               appName.visible = true
-               appName.forceActiveFocus()
-           }
+            iconName: "settings"
+            onTriggered: {
+                if (searchPackageMessage.visible) {
+                    packageListModel.clear()
+                    listView.forceLayout()
+                    searchPackageMessage.visible = false
+                    searchInput.visible = false
+                    searchInput.text = ""
+                }
+                enterPackageMessage.visible = true
+                appName.visible = true
+                appName.forceActiveFocus()
+            }
         }
     ]
-
-    ListModel {
-        id: packageListModel
-    }
 
     function installPackage() {
         var comp = Qt.createComponent("ContainerManager.qml")
@@ -178,18 +222,9 @@ Page {
     }
 
     function finishedSearch(result, packageList) {
-        print("finishedSearch")
         for (var i = 0; i < packageList.length; ++i)
         {
             packageListModel.append({"package": packageList[i]})
         }
-        var comp = Qt.createComponent("SearchResults.qml")
-        if( comp.status != Component.Ready )
-        {
-            if( comp.status == Component.Error )
-            console.debug("Error:"+ comp.errorString() );
-            return; // or maybe throw
-        }
-        var object = comp.createObject(appAddView, {"model": packageListModel})
     }       
 }

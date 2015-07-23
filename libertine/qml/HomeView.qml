@@ -68,6 +68,10 @@ Page {
         model: containerAppsList
         delegate: ListItem {
             Label {
+                anchors {
+                    left: parent.left
+                    leftMargin: units.gu(1)
+                }
                 text: packageName
             }
             leadingActions: ListItemActions {
