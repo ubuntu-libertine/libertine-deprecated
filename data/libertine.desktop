@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Name="Libertine"
-Comment"Legacy Application Sandbox"
+Comment="Legacy Application Sandbox"
 Exec=libertine
 Terminal=false
 Type=Application
