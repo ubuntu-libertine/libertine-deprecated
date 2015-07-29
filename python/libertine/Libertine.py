@@ -21,6 +21,7 @@ import ctypes
 import tempfile
 import io
 import sys
+import shlex
 
 from contextlib import contextmanager
 
@@ -108,20 +109,19 @@ def setup_host_environment(username, password):
         add_user_cmd = "echo %s | sudo tee -a /etc/lxc/lxc-usernet > /dev/null" % lxc_net_entry
         subprocess.Popen(add_user_cmd, shell=True)
 
-def get_libertine_container_path():
-    path = "%s/.cache/libertine-container/" % home_path
+def get_host_distro_release():
+    distinfo = lsb_release.get_distro_information()
 
-    return path
+    return distinfo.get('CODENAME', 'n/a')
+
+def get_libertine_container_path():
+    return os.path.join(home_path, '.cache', 'libertine-container')
 
 def get_lxc_default_config_path():
-    path = "%s/.config/lxc" % home_path
-
-    return path
+    return os.path.join(home_path, '.config', 'lxc')
 
 def get_libertine_user_data_dir(name):
-    user_data_path = "%s/.local/share/libertine-container/user-data/%s" % (home_path, name)
-
-    return user_data_path
+    return os.path.join(home_path, '.local', 'share', 'libertine-container', 'user-data', name)
 
 def create_libertine_user_data_dir(name):
     user_data = get_libertine_user_data_dir(name)
@@ -151,7 +151,7 @@ def start_container_for_update(container):
 
     return True
 
-def instantiate_libertine_container(name):
+def lxc_container(name):
     config_path = get_libertine_container_path()
     container = lxc.Container(name, config_path)
 
@@ -162,13 +162,9 @@ def list_libertine_containers():
 
     return containers
 
-class LibertineContainer(object):
-    """
-    A sandbox for DEB-packaged X11-based applications.
-    """
+class LibertineLXC(object):
     def __init__(self, name):
-        super().__init__()
-        self.container = instantiate_libertine_container(name)
+        self.container = lxc_container(name)
 
     def destroy_libertine_container(self):
         if self.container.defined:
@@ -209,8 +205,7 @@ class LibertineContainer(object):
         create_libertine_user_data_dir(self.container.name)
 
         ## Get to the codename of the host Ubuntu release so container will match
-        distinfo = lsb_release.get_distro_information()
-        installed_release = distinfo.get('CODENAME', 'n/a')
+        installed_release = get_host_distro_release()
 
         ## Figure out the host architecture
         dpkg = subprocess.Popen(['dpkg', '--print-architecture'],
@@ -321,3 +316,93 @@ class LibertineContainer(object):
 
         if stop_container:
             self.container.stop()
+
+
+class LibertineChroot(object):
+    def __init__(self, name):
+        self.name = name
+
+    def destroy_libertine_container(self):
+        return True
+
+    def create_libertine_container(self, password=None):
+        installed_release = get_host_distro_release()
+        chroot_path = os.path.join(get_libertine_container_path(), self.name)
+
+        # Create the actual chroot
+        command_line = "fakechroot fakeroot debootstrap --verbose --variant=fakechroot " + installed_release + " " + chroot_path
+        args = shlex.split(command_line)
+        subprocess.Popen(args, env={'FAKECHROOT_CMD_SUBST': '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'}).wait()
+
+        # Remove symlinks as they can ill-behaved recursive behavior in the chroot
+        print("Fixing chroot symlinks...")
+        os.remove(os.path.join(chroot_path, 'dev'))
+        os.remove(os.path.join(chroot_path, 'proc'))
+
+        # Add universe and -updates to the chroot's sources.list
+        print("Updating chroot's sources.list entries...")
+        with open(os.path.join(chroot_path, 'etc', 'apt', 'sources.list'), 'a') as fd:
+            fd.write("deb http://archive.ubuntu.com/ubuntu " + installed_release + " universe\n")
+            fd.write("deb http://archive.ubuntu.com/ubuntu " + installed_release + "-updates main\n")
+            fd.write("deb http://archive.ubuntu.com/ubuntu " + installed_release + "-updates universe\n")
+
+            fd.close()
+
+        # Generate the proper locale(s) in the chroot
+        print("Generating chroot's locale...")
+        locale = os.popen("locale", "r").read().split("\n")
+        locales = ''
+
+        for line in locale:
+            if line == "":
+                break
+            line = line.split('=')[1].replace("\"", "")
+            if not line in locales and line != "":
+                locales += ' ' + line
+
+        command_line = "fakechroot fakeroot chroot " + chroot_path + " /usr/sbin/locale-gen " + locales
+        args = shlex.split(command_line)
+        cmd = subprocess.Popen(args, env={'FAKECHROOT_CMD_SUBST': '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'}).wait()
+
+    def update_libertine_container(self):
+        return True
+
+    def install_package(self, package_name):
+        return True        
+
+    def remove_package(self, package_name):    
+        return True
+       
+
+class LibertineContainer(object):
+    """
+    A sandbox for DEB-packaged X11-based applications.
+    """
+    def __init__(self, name, container_type="lxc"):
+        super().__init__()
+        if container_type == "lxc":
+            self.container = LibertineLXC(name)
+
+        elif container_type == "chroot":
+            self.container = LibertineChroot(name)
+
+        else:
+            print("Unsupported container type %s" % container_type)
+
+    def destroy_libertine_container(self):
+        self.container.destroy_libertine_container()
+
+    def create_libertine_container(self, password=None):
+        self.container.create_libertine_container(password)
+
+    def create_libertine_config(self):
+        self.container.create_libertine_config()
+
+    def update_libertine_container(self):
+        self.container.update_libertine_container()
+
+    def install_package(self, package_name):
+        self.container.install_package(package_name)
+
+    def remove_package(self, package_name):
+        self.container.remove_package(package_name)
