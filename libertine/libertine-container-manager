@@ -50,11 +50,11 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.destroy:
-        container = LibertineContainer(options.destroy)
+        container = LibertineContainer(options.destroy, options.container_type)
         container.destroy_libertine_container()
 
     if options.update_container:
-        container = LibertineContainer(options.update_container)
+        container = LibertineContainer(options.update_container, options.container_type)
         container.update_libertine_container()
 
     if options.list:
@@ -72,5 +72,5 @@ if __name__ == '__main__':
         container.create_libertine_container(password)
 
     if options.install_package and options.package_name:
-        container = LibertineContainer(options.install_package)
+        container = LibertineContainer(options.install_package, options.container_type)
         container.install_package(options.package_name)

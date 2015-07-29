@@ -22,6 +22,7 @@ import tempfile
 import io
 import sys
 import shlex
+import shutil
 
 from contextlib import contextmanager
 
@@ -321,27 +322,28 @@ class LibertineLXC(object):
 class LibertineChroot(object):
     def __init__(self, name):
         self.name = name
+        self.chroot_path = os.path.join(get_libertine_container_path(), name)
 
     def destroy_libertine_container(self):
-        return True
+        shutil.rmtree(self.chroot_path)
 
     def create_libertine_container(self, password=None):
         installed_release = get_host_distro_release()
-        chroot_path = os.path.join(get_libertine_container_path(), self.name)
+        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
 
         # Create the actual chroot
-        command_line = "fakechroot fakeroot debootstrap --verbose --variant=fakechroot " + installed_release + " " + chroot_path
+        command_line = "fakechroot fakeroot debootstrap --verbose --variant=fakechroot " + installed_release + " " + self.chroot_path
         args = shlex.split(command_line)
-        subprocess.Popen(args, env={'FAKECHROOT_CMD_SUBST': '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'}).wait()
+        subprocess.Popen(args).wait()
 
         # Remove symlinks as they can ill-behaved recursive behavior in the chroot
         print("Fixing chroot symlinks...")
-        os.remove(os.path.join(chroot_path, 'dev'))
-        os.remove(os.path.join(chroot_path, 'proc'))
+        os.remove(os.path.join(self.chroot_path, 'dev'))
+        os.remove(os.path.join(self.chroot_path, 'proc'))
 
         # Add universe and -updates to the chroot's sources.list
         print("Updating chroot's sources.list entries...")
-        with open(os.path.join(chroot_path, 'etc', 'apt', 'sources.list'), 'a') as fd:
+        with open(os.path.join(self.chroot_path, 'etc', 'apt', 'sources.list'), 'a') as fd:
             fd.write("deb http://archive.ubuntu.com/ubuntu " + installed_release + " universe\n")
             fd.write("deb http://archive.ubuntu.com/ubuntu " + installed_release + "-updates main\n")
             fd.write("deb http://archive.ubuntu.com/ubuntu " + installed_release + "-updates universe\n")
@@ -360,19 +362,34 @@ class LibertineChroot(object):
             if not line in locales and line != "":
                 locales += ' ' + line
 
-        command_line = "fakechroot fakeroot chroot " + chroot_path + " /usr/sbin/locale-gen " + locales
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/sbin/locale-gen " + locales
         args = shlex.split(command_line)
-        cmd = subprocess.Popen(args, env={'FAKECHROOT_CMD_SUBST': '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'}).wait()
+        cmd = subprocess.Popen(args).wait()
 
     def update_libertine_container(self):
-        return True
+        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
+
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get update"
+        args = shlex.split(command_line)
+        cmd = subprocess.Popen(args).wait()
+
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get dist-upgrade -y"
+        args = shlex.split(command_line)
+        cmd = subprocess.Popen(args).wait()
 
     def install_package(self, package_name):
-        return True        
+        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
 
-    def remove_package(self, package_name):    
-        return True
-       
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get install -y " + package_name
+        args = shlex.split(command_line)
+        cmd = subprocess.Popen(args).wait()
+
+    def remove_package(self, package_name):
+        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
+
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get remove -y " + package_name
+        args = shlex.split(command_line)
+        cmd = subprocess.Popen(args).wait()
 
 class LibertineContainer(object):
     """
