@@ -21,7 +21,7 @@ import lxc
 import os
 import getpass
 
-from Libertine import LibertineContainer, list_libertine_containers
+from libertine import LibertineContainer, list_libertine_containers
 
 if __name__ == '__main__':
     parser = optparse.OptionParser(description="Legacy X application support for Unity 8")

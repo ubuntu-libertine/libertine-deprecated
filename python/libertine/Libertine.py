@@ -323,13 +323,13 @@ class LibertineChroot(object):
     def __init__(self, name):
         self.name = name
         self.chroot_path = os.path.join(get_libertine_container_path(), name)
+        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
 
     def destroy_libertine_container(self):
         shutil.rmtree(self.chroot_path)
 
     def create_libertine_container(self, password=None):
         installed_release = get_host_distro_release()
-        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
 
         # Create the actual chroot
         command_line = "fakechroot fakeroot debootstrap --verbose --variant=fakechroot " + installed_release + " " + self.chroot_path
@@ -367,8 +367,6 @@ class LibertineChroot(object):
         cmd = subprocess.Popen(args).wait()
 
     def update_libertine_container(self):
-        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
-
         command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get update"
         args = shlex.split(command_line)
         cmd = subprocess.Popen(args).wait()
@@ -378,15 +376,11 @@ class LibertineChroot(object):
         cmd = subprocess.Popen(args).wait()
 
     def install_package(self, package_name):
-        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
-
         command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get install -y " + package_name
         args = shlex.split(command_line)
         cmd = subprocess.Popen(args).wait()
 
     def remove_package(self, package_name):
-        os.environ['FAKECHROOT_CMD_SUBST'] = '$FAKECHROOT_CMD_SUBST:/usr/bin/chfn=/bin/true'
-
         command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get remove -y " + package_name
         args = shlex.split(command_line)
         cmd = subprocess.Popen(args).wait()
