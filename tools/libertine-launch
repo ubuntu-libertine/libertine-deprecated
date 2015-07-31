@@ -22,13 +22,13 @@ import json
 import lxc
 import subprocess
 import shlex
+import xdg.BaseDirectory as basedir
 
 home_path = os.environ['HOME']
-user = os.environ['USER']
 
-libertine_json_file_path = os.path.join(home_path, '.local', 'share', 'libertine', 'ContainersConfig.json')
-libertine_container_path = os.path.join(home_path, '.cache', 'libertine-container')
-libertine_userdata_path = os.path.join(home_path, '.local', 'share', 'libertine-container', 'user-data')
+libertine_json_file_path = os.path.join(basedir.xdg_data_home, 'libertine', 'ContainersConfig.json')
+libertine_container_path = basedir.save_cache_path('libertine-container')
+libertine_userdata_path = os.path.join(basedir.xdg_data_home, 'libertine-container', 'user-data')
 
 def get_container_type(container_id):
     container_type = ''
