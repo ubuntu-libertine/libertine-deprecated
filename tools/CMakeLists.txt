@@ -1,0 +1,1 @@
+install(TARGETS libertine-launch RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
