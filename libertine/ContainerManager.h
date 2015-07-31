@@ -89,7 +89,7 @@ private:
   void destroyContainer();
   void installPackage(QString const& package_name);
   void removePackage(QString const& package_name);
-  void searchPackageCache(QString const& container_id, QString const& search_string);
+  void searchPackageCache(QString const& search_string);
   void updateContainer();
 
 private:
