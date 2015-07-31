@@ -49,9 +49,11 @@ public:
 public:
   ContainerManagerWorker();
   ContainerManagerWorker(ContainerAction container_action,
-                         QString const& container_id);
+                         QString const& container_id,
+                         QString const& container_type);
   ContainerManagerWorker(ContainerAction container_action,
                          QString const& container_id,
+                         QString const& container_type,
                          QString const& data);
   ~ContainerManagerWorker();
 
@@ -68,6 +70,12 @@ public:
   container_id(QString const& container_id);
 
   QString const&
+  container_type() const;
+
+  void
+  container_type(QString const& container_type);
+
+  QString const&
   data() const;
 
   void
@@ -77,16 +85,18 @@ protected:
   void run() Q_DECL_OVERRIDE;
 
 private:
-  void createContainer(QString const& container_id, QString const& password);
-  void destroyContainer(QString const& container_id);
-  void installPackage(QString const& container_id, QString const& package_name);
-  void removePackage(QString const& container_id, QString const& package_name);
+  void createContainer(QString const& password);
+  void destroyContainer();
+  void installPackage(QString const& package_name);
+  void removePackage(QString const& package_name);
   void searchPackageCache(QString const& container_id, QString const& search_string);
-  void updateContainer(QString const& container_id);
+  void updateContainer();
 
 private:
   ContainerAction container_action_;
+  LibertineManagerWrapper *manager_;
   QString container_id_;
+  QString container_type_;
   QString data_;
 
 signals:
