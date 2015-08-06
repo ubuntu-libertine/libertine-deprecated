@@ -32,7 +32,7 @@ Page {
     }
 
     function passwordAccepted(password) {
-        var container_id = containerConfigList.addNewContainer(imageSelector.selectedImageSource)
+        var container_id = containerConfigList.addNewContainer(imageSelector.selectedImageSource, typeSelector.selectedImageType)
         var comp = Qt.createComponent("ContainerManager.qml")
         var worker = comp.createObject()
         worker.containerAction = ContainerManagerWorker.Create
@@ -70,6 +70,7 @@ Page {
         ComboButton {
             id: imageSelector
             Layout.alignment: Qt.AlignCenter
+            z: 2
 
             property var selectedImageSource: imageSources.defaultSource()
             text: selectedImageSource ? selectedImageSource.name : i18n.tr("Select an image")
@@ -82,7 +83,6 @@ Page {
                         imageSelector.text = text
                         imageSelector.expanded = false
                         imageSelector.selectedImageSource = modelData
-                        installButton.enabled = true
                     }
                 }
             }
@@ -94,6 +94,36 @@ Page {
             }
         }
 
+        ComboButton {
+            id: typeSelector
+            Layout.alignment: Qt.AlignCenter
+            z: 1
+
+            property var selectedImageType
+            text: selectedImageType ? selectedImageType : i18n.tr("Select an image")
+
+            Component {
+                id: imageTypeDelegate
+                ListItem.Standard {
+                    text: type
+                    onClicked: {
+                        typeSelector.text = type
+                        typeSelector.expanded = false
+                        typeSelector.selectedImageType = type
+                    }
+                }
+            }
+
+            UbuntuListView {
+                id: availableImageTypesList
+                model: ListModel {
+                    ListElement { type: "lxc" }
+                    ListElement { type: "chroot" }
+                }
+                delegate: imageTypeDelegate
+            }
+        }
+
         Button {
             id: installButton
             Layout.alignment: Qt.AlignCenter
@@ -101,7 +131,7 @@ Page {
 
             text: i18n.tr("Install")
             color: UbuntuColors.green
-            enabled: imageSelector.selectedImageSource
+            enabled: imageSelector.selectedImageSource ? (typeSelector.selectedImageType ? true : false) : false
 
             onClicked: {
                 var item = pageStack.push(Qt.resolvedUrl("PasswordView.qml"))
