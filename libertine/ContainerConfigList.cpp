@@ -180,6 +180,32 @@ addNewApp(QString const& container_id, QString const& package_name)
 
 
 void ContainerConfigList::
+addNewApp(QString const& container_id,
+          QString const& package_name,
+          QString const& version,
+          QString const& maintainer,
+          QString const& description)
+{
+  for (auto const& config: configs_)
+  {
+    if (config->container_id() == container_id)
+    {
+      config->container_apps().append(new ContainerApps(package_name,
+                                                        ContainerApps::AppStatus::New,
+                                                        version,
+                                                        maintainer,
+                                                        description,
+                                                        this));
+
+      save_container_config_list();
+
+      break;
+    }
+  }
+}
+
+
+void ContainerConfigList::
 removeApp(QString const& container_id, int index)
 {
   int container_index = getContainerIndex(container_id);

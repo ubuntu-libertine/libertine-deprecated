@@ -46,6 +46,9 @@ public:
   {
     PackageName = Qt::UserRole + 1,
     AppStatus,
+    Version,
+    Maintainer,
+    Description,
     Error
   };
 
@@ -61,6 +64,13 @@ public:
 
   Q_INVOKABLE void
   addNewApp(QString const& container_id, QString const& package_name);
+
+  Q_INVOKABLE void
+  addNewApp(QString const& container_id,
+            QString const& package_name,
+            QString const& version,
+            QString const& maintainer,
+            QString const& description);
 
   Q_INVOKABLE void
   removeApp(QString const& container_id, QString const& package_name);

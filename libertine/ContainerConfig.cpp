@@ -211,11 +211,68 @@ namespace {
     return app_status;
   }
 
+  QString
+  extract_package_version_from_json(QJsonObject const& json_object)
+  {
+    QString version;
+
+    QJsonValue value = json_object["version"];
+    if (value != QJsonValue::Undefined)
+    {
+      QJsonValue::Type value_type = value.type();
+      if (value_type == QJsonValue::String)
+      {
+        version = value.toString();
+      }
+    }
+
+    return version;
+  }
+
+  QString
+  extract_package_maintainer_from_json(QJsonObject const& json_object)
+  {
+    QString maintainer;
+
+    QJsonValue value = json_object["maintainer"];
+    if (value != QJsonValue::Undefined)
+    {
+      QJsonValue::Type value_type = value.type();
+      if (value_type == QJsonValue::String)
+      {
+        maintainer = value.toString();
+      }
+    }
+
+    return maintainer;
+  }
+
+  QString
+  extract_package_description_from_json(QJsonObject const& json_object)
+  {
+    QString description;
+
+    QJsonValue value = json_object["description"];
+    if (value != QJsonValue::Undefined)
+    {
+      QJsonValue::Type value_type = value.type();
+      if (value_type == QJsonValue::String)
+      {
+        description = value.toString();
+      }
+    }
+
+    return description;
+  }
+
   QList<ContainerApps*>
   extract_container_apps_from_json(QJsonObject const& json_object)
   {
     QList<ContainerApps*> container_apps;
-    QString package_name;
+    QString package_name,
+            version,
+            maintainer,
+            description;
     ContainerApps::AppStatus app_status;
 
     QJsonArray installed_apps = json_object["installedApps"].toArray();
@@ -223,10 +280,12 @@ namespace {
     for (auto const& app: installed_apps)
     {
       package_name = extract_package_name_from_json(app.toObject());
-
       app_status = extract_app_status_from_json(app.toObject());
+      version = extract_package_version_from_json(app.toObject());
+      maintainer = extract_package_maintainer_from_json(app.toObject());
+      description = extract_package_description_from_json(app.toObject());
 
-      container_apps.append(new ContainerApps(package_name, app_status));
+      container_apps.append(new ContainerApps(package_name, app_status, version, maintainer, description));
     }
     return container_apps;
   }
@@ -244,6 +303,22 @@ ContainerApps(QString const& package_name,
 
 
 ContainerApps::
+ContainerApps(QString const& package_name,
+              ContainerApps::AppStatus app_status,
+              QString const& version,
+              QString const& maintainer,
+              QString const& description,
+              QObject* parent)
+: QObject(parent)
+, package_name_(package_name)
+, app_status_(app_status)
+, version_(version)
+, maintainer_(maintainer)
+, description_(description)
+{ }
+
+
+ContainerApps::
 ~ContainerApps()
 { }
 
@@ -256,6 +331,31 @@ package_name() const
 ContainerApps::AppStatus ContainerApps::
 app_status() const
 { return app_status_; }
+
+
+void ContainerApps::
+app_status(AppStatus app_status)
+{
+  if (app_status != app_status_)
+  {
+    app_status_ = app_status;
+  }
+}
+
+
+QString const& ContainerApps::
+version() const
+{ return version_; }
+
+
+QString const& ContainerApps::
+maintainer() const
+{ return maintainer_; }
+
+
+QString const& ContainerApps::
+description() const
+{ return description_; }
 
 
 ContainerConfig::
@@ -367,11 +467,12 @@ toJson() const
   {
     app_object["packageName"] = container_app->package_name();
     app_object["appStatus"] = app_status_names[0].string;
+    app_object["version"] = container_app->version();
+    app_object["maintainer"] = container_app->maintainer();
+    app_object["description"] = container_app->description();
     apps.append(app_object);
   }
   json_object["installedApps"] = apps;
 
   return json_object;
 }
-
-

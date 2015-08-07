@@ -32,6 +32,11 @@
 
 using namespace std;
 
+void finishedInstall()
+{
+
+}
+
 int main (int argc, char *argv[])
 {
   LibertineConfig config;
@@ -161,8 +166,14 @@ int main (int argc, char *argv[])
 
     if (commandlineParser.isSet("package"))
     {
+      char version[128],
+           maintainer[128],
+           description[2048];
       const QString package_name = commandlineParser.value("package");
+      //LibertineManagerWrapper manager(container_id.toStdString().c_str(), containers->getContainerType(container_id).toStdString().c_str());
 
+      //manager.GetPackageInfo(package_name.toStdString().c_str(), version, maintainer, description);
+      //containers->addNewApp(container_id, package_name, QString(version), QString(maintainer), QString(description));
       containers->addNewApp(container_id, package_name);
 
       ContainerManagerWorker *worker = new ContainerManagerWorker(ContainerManagerWorker::ContainerAction::Install,

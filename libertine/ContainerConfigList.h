@@ -100,6 +100,13 @@ public:
   addNewApp(QString const& container_id,
             QString const& package_name);
 
+  Q_INVOKABLE void
+  addNewApp(QString const& container_id,
+            QString const& package_name,
+            QString const& version,
+            QString const& maintainer,
+            QString const& description);
+
   void
   removeApp(QString const& container_id,
             int index);

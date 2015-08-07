@@ -39,6 +39,12 @@ public:
   ContainerApps(QString const& package_name,
                 AppStatus app_status,
                 QObject* parent = nullptr);
+  ContainerApps(QString const& package_name,
+                AppStatus app_status,
+                QString const& version,
+                QString const& maintainer,
+                QString const& description,
+                QObject* parent = nullptr);
   ~ContainerApps();
 
   QString const&
@@ -47,9 +53,24 @@ public:
   AppStatus
   app_status() const;
 
+  void
+  app_status(AppStatus app_status);
+
+  QString const&
+  version() const;
+
+  QString const&
+  maintainer() const;
+
+  QString const&
+  description() const;
+
 private:
   QString   package_name_;
   AppStatus app_status_;
+  QString   version_;
+  QString   maintainer_;
+  QString   description_;
 };
 
 

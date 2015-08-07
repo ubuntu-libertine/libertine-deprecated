@@ -51,6 +51,25 @@ addNewApp(QString const& container_id, QString const& package_name)
 
 
 void ContainerAppsList::
+addNewApp(QString const& container_id,
+          QString const& package_name,
+          QString const& version,
+          QString const& maintainer,
+          QString const& description)
+{
+  beginInsertRows(QModelIndex(), rowCount(), rowCount());
+
+  container_config_list_->addNewApp(container_id,
+                                    package_name,
+                                    version,
+                                    maintainer,
+                                    description);
+
+  endInsertRows();
+}
+
+
+void ContainerAppsList::
 removeApp(QString const& container_id, QString const& package_name)
 {
   int index = container_config_list_->getAppIndex(container_id, package_name);
@@ -86,6 +105,9 @@ roleNames() const
   QHash<int, QByteArray> roles;
   roles[static_cast<int>(DataRole::PackageName)] = "packageName";
   roles[static_cast<int>(DataRole::AppStatus)]   = "appStatus";
+  roles[static_cast<int>(DataRole::Version)]   = "version";
+  roles[static_cast<int>(DataRole::Maintainer)]   = "maintainer";
+  roles[static_cast<int>(DataRole::Description)]   = "description";
   return roles;
 }
 
@@ -104,6 +126,15 @@ data(QModelIndex const& index, int role) const
         break;
       case DataRole::AppStatus:
         result = static_cast<int>((*apps_)[index.row()]->app_status());
+        break;
+      case DataRole::Version:
+        result = (*apps_)[index.row()]->version();
+        break;
+      case DataRole::Maintainer:
+        result = (*apps_)[index.row()]->maintainer();
+        break;
+      case DataRole::Description:
+        result = (*apps_)[index.row()]->description();
         break;
       case DataRole::Error:
         break;

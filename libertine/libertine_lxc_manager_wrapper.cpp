@@ -30,6 +30,7 @@ const char* PY_CREATE_LIBERTINE_CONFIG = "create_libertine_config";
 const char* PY_UPDATE_LIBERTINE_CONTAINER = "update_libertine_container";
 const char* PY_INSTALL_PACKAGE_IN_CONTAINER = "install_package";
 const char* PY_REMOVE_PACKAGE_IN_CONTAINER = "remove_package";
+const char* PY_GET_PACKAGE_INFO_IN_CONTAINER = "get_package_info";
 
 // Functions outside of the Python class that are needed
 const char* PY_LIST_LIBERTINE_CONTAINERS = "list_libertine_containers";
@@ -174,6 +175,47 @@ bool LibertineManagerWrapper::RemovePackageInContainer(const char* package_name,
       {
         strncpy(*error_msg, PyUnicode_AsUTF8(msg), 1024);
         success = false;
+      }
+    }
+    Py_DECREF(result);
+  }
+  else
+  {
+    PyErr_Print();
+  }
+
+  PyGILState_Release(gstate);
+
+  return success;
+}
+
+bool LibertineManagerWrapper::GetPackageInfo(const char* package_name, char* version, char* maintainer, char* description)
+{
+  bool success = true;
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject *result = PyObject_CallMethod(pInstance_, PY_GET_PACKAGE_INFO_IN_CONTAINER, "s", package_name);
+
+  if (result)
+  {
+    if (PyTuple_GetItem(result, 0) == Py_True)
+    {
+      PyObject *msg;
+      if (PyUnicode_Check((msg = PyTuple_GetItem(result, 1))))
+      {
+        strncpy(version, PyUnicode_AsUTF8(msg), 128);
+      }
+
+      if (PyUnicode_Check((msg = PyTuple_GetItem(result, 2))))
+      {
+        strncpy(maintainer, PyUnicode_AsUTF8(msg), 128);
+      }
+
+      if (PyUnicode_Check((msg = PyTuple_GetItem(result, 3))))
+      {
+        strncpy(description, PyUnicode_AsUTF8(msg), 2048);
       }
     }
     Py_DECREF(result);

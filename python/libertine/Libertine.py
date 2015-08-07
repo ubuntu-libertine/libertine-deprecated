@@ -23,6 +23,7 @@ import io
 import sys
 import shlex
 import shutil
+import apt
 import xdg.BaseDirectory as basedir
 
 from contextlib import contextmanager
@@ -167,6 +168,7 @@ def list_libertine_containers():
 class LibertineLXC(object):
     def __init__(self, name):
         self.container = lxc_container(name)
+        self.rootfs_path = os.path.join(get_libertine_container_path(), name, 'rootfs')
 
     def destroy_libertine_container(self):
         if self.container.defined:
@@ -319,6 +321,24 @@ class LibertineLXC(object):
         if stop_container:
             self.container.stop()
 
+    def get_package_info(self, package_name):
+        version = ''
+        maintainer = ''
+        description = ''
+
+        cache = apt.Cache(rootdir=self.rootfs_path)
+
+        pkg = cache[package_name]
+
+        versions = pkg.versions
+        for ver in versions:
+            if ver == pkg.installed:
+                version = ver.version
+                maintainer = ver.record['Maintainer']
+                description = ver.description
+                break
+
+        return (True, version, maintainer, description)
 
 class LibertineChroot(object):
     def __init__(self, name):
@@ -386,6 +406,25 @@ class LibertineChroot(object):
         args = shlex.split(command_line)
         cmd = subprocess.Popen(args).wait()
 
+    def get_package_info(self, package_name):
+        version = ''
+        maintainer = ''
+        description = ''
+
+        cache = apt.Cache(rootdir=self.chroot_path)
+
+        pkg = cache[package_name]
+
+        versions = pkg.versions
+        for ver in versions:
+            if ver == pkg.installed:
+                version = ver.version
+                maintainer = ver.record['Maintainer']
+                description = ver.description
+                break
+
+        return (True, version, maintainer, description)
+      
 class LibertineContainer(object):
     """
     A sandbox for DEB-packaged X11-based applications.
@@ -418,3 +457,6 @@ class LibertineContainer(object):
 
     def remove_package(self, package_name):
         self.container.remove_package(package_name)
+
+    def get_package_info(self, package_name):
+        return self.container.get_package_info(package_name)
