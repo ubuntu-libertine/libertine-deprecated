@@ -167,13 +167,11 @@ void ContainerManagerWorker::
 installPackage(QString const& package_name)
 {
   char error_msg[1024];
-  char *buff_ptr = error_msg;
   bool result;
 
-  //result = manager_->InstallPackageInContainer(package_name.toStdString().c_str(), &buff_ptr);
-  result = true;
+  result = manager_->InstallPackageInContainer(package_name.toStdString().c_str(), error_msg);
 
-  emit finishedInstall(result, QString(error_msg));
+  emit finishedPackageInstall(container_id_, package_name, result, QString(error_msg));
   emit finished();
   quit();
 }

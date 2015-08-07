@@ -348,14 +348,44 @@ version() const
 { return version_; }
 
 
+void ContainerApps::
+version(QString const& version)
+{
+  if (version != version_)
+  {
+    version_ = version;
+  }
+}
+
+
 QString const& ContainerApps::
 maintainer() const
 { return maintainer_; }
 
 
+void ContainerApps::
+maintainer(QString const& maintainer)
+{
+  if (maintainer != maintainer_)
+  {
+    maintainer_ = maintainer;
+  }
+}
+
+
 QString const& ContainerApps::
 description() const
 { return description_; }
+
+
+void ContainerApps::
+description(QString const& description)
+{
+  if (description != description_)
+  {
+    description_ = description;
+  }
+}
 
 
 ContainerConfig::
@@ -466,10 +496,17 @@ toJson() const
   for (auto const& container_app: container_apps_)
   {
     app_object["packageName"] = container_app->package_name();
-    app_object["appStatus"] = app_status_names[0].string;
     app_object["version"] = container_app->version();
     app_object["maintainer"] = container_app->maintainer();
     app_object["description"] = container_app->description();
+    for (auto const& status: app_status_names)
+    {
+      if (container_app->app_status() == status.enumeration)
+      {
+        app_object["appStatus"] = status.string;
+        break;
+      }
+    }
     apps.append(app_object);
   }
   json_object["installedApps"] = apps;

@@ -125,7 +125,7 @@ void LibertineManagerWrapper::UpdateLibertineContainer()
   PyGILState_Release(gstate);
 }
 
-bool LibertineManagerWrapper::InstallPackageInContainer(const char* package_name, char** error_msg)
+bool LibertineManagerWrapper::InstallPackageInContainer(const char* package_name, char* error_msg)
 {
   bool success = true;
 
@@ -141,7 +141,7 @@ bool LibertineManagerWrapper::InstallPackageInContainer(const char* package_name
       PyObject *msg;
       if (PyUnicode_Check((msg = PyTuple_GetItem(result, 1))))
       {
-        strncpy(*error_msg, PyUnicode_AsUTF8(msg), 1024);
+        strncpy(error_msg, PyUnicode_AsUTF8(msg), 1024);
         success = false;
       }
     }

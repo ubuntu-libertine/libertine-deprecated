@@ -108,7 +108,10 @@ signals:
   void dataChanged();
   void finished();
   void finishedDestroy(QString const& container_id);
-  void finishedInstall(bool result, QString const& error_msg);
+  void finishedPackageInstall(QString const& container_id,
+                              QString const& package_name,
+                              bool result,
+                              QString const& error_msg);
   void finishedRemove(bool result, QString const& error_msg);
 };
 

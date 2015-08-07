@@ -59,11 +59,20 @@ public:
   QString const&
   version() const;
 
+  void
+  version(QString const& version);
+
   QString const&
   maintainer() const;
 
+  void
+  maintainer(QString const& maintainer);
+
   QString const&
   description() const;
+
+  void
+  description(QString const& description);
 
 private:
   QString   package_name_;

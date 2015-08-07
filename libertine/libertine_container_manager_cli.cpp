@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "libertine/libertine_container_manager_cli.h"
 #include "libertine/libertine_lxc_manager_wrapper.h"
 #include "libertine/ContainerConfigList.h"
 #include "libertine/ContainerManager.h"
@@ -32,15 +33,42 @@
 
 using namespace std;
 
-void finishedInstall()
-{
 
+LibertineManagerCommandLine::
+LibertineManagerCommandLine(QObject* parent)
+: QObject(parent)
+{ }
+
+
+LibertineManagerCommandLine::
+~LibertineManagerCommandLine()
+{ }
+
+
+void LibertineManagerCommandLine::
+finishedPackageInstall(QString const& container_id,
+                       QString const& package_name,
+                       bool result,
+                       QString const& error_msg)
+{
+  if (result == true)
+  {
+    char version[128],
+         maintainer[128],
+         description[2048];
+    LibertineManagerWrapper manager(container_id.toStdString().c_str(), containers->getContainerType(container_id).toStdString().c_str());
+
+    manager.GetPackageInfo(package_name.toStdString().c_str(), version, maintainer, description);
+
+    containers->setPackageInfo(container_id, package_name, QString(version), QString(maintainer), QString(description));
+  }
 }
+
 
 int main (int argc, char *argv[])
 {
+  LibertineManagerCommandLine libertine_manager;
   LibertineConfig config;
-  ContainerConfigList* containers;
   QCommandLineParser commandlineParser;
 
   QCoreApplication app(argc, argv);
@@ -48,7 +76,7 @@ int main (int argc, char *argv[])
 
   initialize_python();
 
-  containers = new ContainerConfigList(&config);
+  libertine_manager.containers = new ContainerConfigList(&config);
 
   commandlineParser.setApplicationDescription("Command-line tool to manage sandboxes for running legacy DEB-packaged X11-based applications");
   commandlineParser.addHelpOption();
@@ -103,7 +131,7 @@ int main (int argc, char *argv[])
     QVariantMap image;
     image.insert("id", "wily");
     image.insert("name", "Ubuntu 'Wily Werewolf'");
-    QString container_id = containers->addNewContainer(image, container_type);
+    QString container_id = libertine_manager.containers->addNewContainer(image, container_type);
 
     ContainerManagerWorker *worker = new ContainerManagerWorker(ContainerManagerWorker::ContainerAction::Create,
                                                                 container_id,
@@ -127,14 +155,14 @@ int main (int argc, char *argv[])
     }
     else
     {
-      container_id = containers->default_container_id();
+      container_id = libertine_manager.containers->default_container_id();
     }
 
-    if (containers->deleteContainer(container_id))
+    if (libertine_manager.containers->deleteContainer(container_id))
     {
       ContainerManagerWorker *worker = new ContainerManagerWorker(ContainerManagerWorker::ContainerAction::Destroy,
                                                                   container_id,
-                                                                  containers->getContainerType(container_id));
+                                                                  libertine_manager.containers->getContainerType(container_id));
       QObject::connect(worker, SIGNAL(finished()), &app, SLOT(quit()));
       worker->start();
     }
@@ -161,25 +189,22 @@ int main (int argc, char *argv[])
     }
     else
     {
-      container_id = containers->default_container_id();
+      container_id = libertine_manager.containers->default_container_id();
     }
 
     if (commandlineParser.isSet("package"))
     {
-      char version[128],
-           maintainer[128],
-           description[2048];
       const QString package_name = commandlineParser.value("package");
-      //LibertineManagerWrapper manager(container_id.toStdString().c_str(), containers->getContainerType(container_id).toStdString().c_str());
-
-      //manager.GetPackageInfo(package_name.toStdString().c_str(), version, maintainer, description);
-      //containers->addNewApp(container_id, package_name, QString(version), QString(maintainer), QString(description));
-      containers->addNewApp(container_id, package_name);
+      libertine_manager.containers->addNewApp(container_id, package_name);
 
       ContainerManagerWorker *worker = new ContainerManagerWorker(ContainerManagerWorker::ContainerAction::Install,
                                                                   container_id,
-                                                                  containers->getContainerType(container_id),
+                                                                  libertine_manager.containers->getContainerType(container_id),
                                                                   package_name);
+      QObject::connect(worker,
+                       SIGNAL(finishedPackageInstall(QString const&, QString const&, bool, QString const&)),
+                       &libertine_manager,
+                       SLOT(finishedPackageInstall(QString const&, QString const&, bool, QString const&)));
       QObject::connect(worker, SIGNAL(finished()), &app, SLOT(quit()));
       worker->start();
     }
@@ -205,12 +230,12 @@ int main (int argc, char *argv[])
     }
     else
     {
-      container_id = containers->default_container_id();
+      container_id = libertine_manager.containers->default_container_id();
     }
 
     ContainerManagerWorker *worker = new ContainerManagerWorker(ContainerManagerWorker::ContainerAction::Update,
                                                                 container_id,
-                                                                containers->getContainerType(container_id));
+                                                                libertine_manager.containers->getContainerType(container_id));
     QObject::connect(worker, SIGNAL(finished()), &app, SLOT(quit()));
     worker->start();
   }
@@ -220,14 +245,14 @@ int main (int argc, char *argv[])
     commandlineParser.addPositionalArgument("list", "List all existing Libertine containers.");
     commandlineParser.process(app);
 
-    int count = containers->size();
+    int count = libertine_manager.containers->size();
     QVariant name, id;
 
     cout << setw(10) << left << "id" << setw(30) << left << "Container Name" << endl;
     for (int i = 0; i < count; ++i)
     {
-      name = containers->data(containers->index(i, 0), (int)ContainerConfigList::DataRole::ContainerName);
-      id = containers->data(containers->index(i, 0), (int)ContainerConfigList::DataRole::ContainerId);
+      name = libertine_manager.containers->data(libertine_manager.containers->index(i, 0), (int)ContainerConfigList::DataRole::ContainerName);
+      id = libertine_manager.containers->data(libertine_manager.containers->index(i, 0), (int)ContainerConfigList::DataRole::ContainerId);
       cout << setw(10) << left << id.toString().toStdString() << setw(30) << left << name.toString().toStdString() << endl;
     }
 

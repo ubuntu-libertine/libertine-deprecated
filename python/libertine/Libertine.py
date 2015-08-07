@@ -387,6 +387,11 @@ class LibertineChroot(object):
         args = shlex.split(command_line)
         cmd = subprocess.Popen(args).wait()
 
+        # Do an initial apt-get update to initialize the apt cache
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + "/usr/bin/apt-get update"
+        args = shlex.split(command_line)
+        cmd = subprocess.Popen(args).wait()
+
     def update_libertine_container(self):
         command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get update"
         args = shlex.split(command_line)

@@ -122,6 +122,13 @@ public:
   getAppIndex(QString const& container_id,
               QString const& package_name);
 
+  void
+  setPackageInfo(QString const& container_id,
+                 QString const& package_name,
+                 QString const& version,
+                 QString const& maintainer,
+                 QString const& description);
+
   Q_INVOKABLE QString
   getContainerType(QString const& container_id);
 

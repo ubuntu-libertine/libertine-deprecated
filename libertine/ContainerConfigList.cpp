@@ -284,6 +284,36 @@ getAppIndex(QString const& container_id, QString const& package_name)
 }
 
 
+void ContainerConfigList::
+setPackageInfo(QString const& container_id,
+               QString const& package_name,
+               QString const& version,
+               QString const& maintainer,
+               QString const& description)
+{
+  for (auto const& config: configs_)
+  {
+    if (config->container_id() == container_id)
+    {
+      for (auto const& app: config->container_apps())
+      {
+        if (app->package_name() == package_name)
+        {
+          app->version(version);
+          app->maintainer(maintainer);
+          app->description(description);
+          app->app_status(ContainerApps::AppStatus::Installed);
+
+          save_container_config_list();
+
+          return;
+        }
+      }
+    }
+  }
+}
+
+
 QString ContainerConfigList::
 getContainerType(QString const& container_id)
 {
