@@ -164,6 +164,25 @@ def start_container_for_update(container):
 
     return True
 
+def get_package_info(rootfs_path, package_name):
+    version = ''
+    maintainer = ''
+    description = ''
+
+    cache = apt.Cache(rootdir=rootfs_path)
+
+    pkg = cache[package_name]
+
+    versions = pkg.versions
+    for ver in versions:
+        if ver == pkg.installed:
+            version = ver.version
+            maintainer = ver.record['Maintainer']
+            description = ver.description
+            break
+
+    return (version, maintainer, description)
+
 def lxc_container(name):
     config_path = get_libertine_container_path()
     container = lxc.Container(name, config_path)
@@ -328,23 +347,7 @@ class LibertineLXC(object):
             self.container.stop()
 
     def get_package_info(self, package_name):
-        version = ''
-        maintainer = ''
-        description = ''
-
-        cache = apt.Cache(rootdir=self.rootfs_path)
-
-        pkg = cache[package_name]
-
-        versions = pkg.versions
-        for ver in versions:
-            if ver == pkg.installed:
-                version = ver.version
-                maintainer = ver.record['Maintainer']
-                description = ver.description
-                break
-
-        return (True, version, maintainer, description)
+        return (True, get_package_info(self.rootfs_path, package_name))
 
 class LibertineChroot(object):
     def __init__(self, name):
@@ -426,23 +429,7 @@ class LibertineChroot(object):
         cmd = subprocess.Popen(args).wait()
 
     def get_package_info(self, package_name):
-        version = ''
-        maintainer = ''
-        description = ''
-
-        cache = apt.Cache(rootdir=self.chroot_path)
-
-        pkg = cache[package_name]
-
-        versions = pkg.versions
-        for ver in versions:
-            if ver == pkg.installed:
-                version = ver.version
-                maintainer = ver.record['Maintainer']
-                description = ver.description
-                break
-
-        return (True, version, maintainer, description)
+        return (True, get_package_info(self.chroot_path, package_name))
       
 class LibertineContainer(object):
     """

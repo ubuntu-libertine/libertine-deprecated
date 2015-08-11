@@ -202,21 +202,26 @@ bool LibertineManagerWrapper::GetPackageInfo(const char* package_name, char* ver
   {
     if (PyTuple_GetItem(result, 0) == Py_True)
     {
-      PyObject *msg;
-      if (PyUnicode_Check((msg = PyTuple_GetItem(result, 1))))
+      PyObject *info,
+               *msg;
+      info = PyTuple_GetItem(result, 1);
+
+      if (PyUnicode_Check((msg = PyTuple_GetItem(info, 0))))
       {
         strncpy(version, PyUnicode_AsUTF8(msg), 128);
       }
 
-      if (PyUnicode_Check((msg = PyTuple_GetItem(result, 2))))
+      if (PyUnicode_Check((msg = PyTuple_GetItem(info, 1))))
       {
         strncpy(maintainer, PyUnicode_AsUTF8(msg), 128);
       }
 
-      if (PyUnicode_Check((msg = PyTuple_GetItem(result, 3))))
+      if (PyUnicode_Check((msg = PyTuple_GetItem(info, 2))))
       {
         strncpy(description, PyUnicode_AsUTF8(msg), 2048);
       }
+      Py_DECREF(info);
+      Py_DECREF(msg);
     }
     Py_DECREF(result);
   }
