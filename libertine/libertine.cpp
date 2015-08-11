@@ -94,6 +94,7 @@ Libertine(int argc, char* argv[])
   qmlRegisterType<ContainerConfig>("Libertine", 1, 0, "ContainerConfig");
   qmlRegisterType<ContainerManagerWorker>("Libertine", 1, 0, "ContainerManagerWorker");
   qmlRegisterType<PasswordHelper>("Libertine", 1, 0, "PasswordHelper");
+  qmlRegisterUncreatableType<ContainerApps>("Libertine", 1, 0, "ContainerApps", "This exports AppStatus enums to QML");
 
   initialize_python();
 

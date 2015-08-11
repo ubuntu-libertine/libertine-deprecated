@@ -19,6 +19,7 @@
 
 #include "libertine/libertine_container_manager_cli.h"
 #include "libertine/libertine_lxc_manager_wrapper.h"
+#include "libertine/ContainerConfig.h"
 #include "libertine/ContainerConfigList.h"
 #include "libertine/ContainerManager.h"
 #include "libertine/LibertineConfig.h"
@@ -60,7 +61,11 @@ finishedPackageInstall(QString const& container_id,
 
     manager.GetPackageInfo(package_name.toStdString().c_str(), version, maintainer, description);
 
-    containers->setPackageInfo(container_id, package_name, QString(version), QString(maintainer), QString(description));
+    containers->setAppInfo(container_id, package_name, QString(version), QString(maintainer), QString(description));
+  }
+  else
+  {
+    containers->setAppStatus(container_id, package_name, ContainerApps::AppStatus::Failed);
   }
 }
 
@@ -206,6 +211,8 @@ int main (int argc, char *argv[])
                        &libertine_manager,
                        SLOT(finishedPackageInstall(QString const&, QString const&, bool, QString const&)));
       QObject::connect(worker, SIGNAL(finished()), &app, SLOT(quit()));
+
+      libertine_manager.containers->setAppStatus(container_id, package_name, ContainerApps::AppStatus::Installing);
       worker->start();
     }
     else

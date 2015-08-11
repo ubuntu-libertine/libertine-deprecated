@@ -43,6 +43,7 @@ public:
     Destroy,
     Install,
     Remove,
+    PackageInfo,
     Update
   };
 
@@ -92,6 +93,7 @@ private:
   void destroyContainer();
   void installPackage(QString const& package_name);
   void removePackage(QString const& package_name);
+  void getPackageInfo(QString const& package_name);
   void updateContainer();
 
 private:
@@ -112,6 +114,11 @@ signals:
                               QString const& package_name,
                               bool result,
                               QString const& error_msg);
+  void finishedPackageInfo(QString const& container_id,
+                           QString const& package_name,
+                           QString const& version,
+                           QString const& maintainer,
+                           QString const& description);
   void finishedRemove(bool result, QString const& error_msg);
 };
 

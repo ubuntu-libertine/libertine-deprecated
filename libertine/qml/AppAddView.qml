@@ -24,7 +24,10 @@ import Ubuntu.Components 1.2
 
 Page {
     id: appAddView
+    objectName: "appAddView"
     title: i18n.tr("Install Apps")
+
+    signal installError(string error_msg)
 
     Label {
         id: enterPackageMessage
@@ -101,6 +104,11 @@ Page {
         }
     ]
 
+    onInstallError: {
+        appInstallMessage.text = error_msg
+        appInstallMessage.visible = true
+    }
+
     function installPackage() {
         var comp = Qt.createComponent("ContainerManager.qml")
         var worker = comp.createObject(null, {"containerAction": ContainerManagerWorker.Install,
@@ -108,21 +116,8 @@ Page {
                                               "containerType": containerConfigList.getContainerType(mainView.currentContainer),
                                               "data": appName.text})
         worker.CreateContainerManager()
-        worker.finishedInstall.connect(finishedInstall)
+        worker.finishedPackageInstall.connect(mainView.finishedPackageInstall)
+        containerConfigList.setAppStatus(mainView.currentContainer, appName.text, ContainerApps.Installing)
         worker.start()
-    }
-
-    function finishedInstall(result, error_msg) {
-        if (result) {
-            if (appAddView) {
-                pageStack.pop()
-            }
-        }
-        else {
-            if (appAddView) {
-                appInstallMessage.text = error_msg
-                appInstallMessage.visible = true
-            }
-        }
     }
 }

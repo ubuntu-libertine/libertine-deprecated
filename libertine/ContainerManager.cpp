@@ -132,6 +132,10 @@ run()
       removePackage(data_);
       break;
 
+    case ContainerAction::PackageInfo:
+      getPackageInfo(data_);
+      break;
+
     case ContainerAction::Update:
       updateContainer();
       break;
@@ -173,6 +177,21 @@ installPackage(QString const& package_name)
 
   emit finishedPackageInstall(container_id_, package_name, result, QString(error_msg));
   emit finished();
+  quit();
+}
+
+
+void ContainerManagerWorker::
+getPackageInfo(QString const& package_name)
+{
+  char version[128],
+       maintainer[128],
+       description[2048];
+
+  manager_->GetPackageInfo(package_name.toStdString().c_str(), version, maintainer, description);
+
+  emit finishedPackageInfo(container_id_, package_name, QString(version), QString(maintainer), QString(description));
+
   quit();
 }
 

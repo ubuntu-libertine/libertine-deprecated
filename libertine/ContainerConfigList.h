@@ -20,6 +20,7 @@
 #define CONTAINER_CONTAINERCONFIGLIST_H
 
 #include "libertine/libertine_lxc_manager_wrapper.h"
+#include "libertine/ContainerConfig.h"
 
 #include <QtCore/QAbstractListModel>
 #include <QtCore/QJsonObject>
@@ -122,12 +123,17 @@ public:
   getAppIndex(QString const& container_id,
               QString const& package_name);
 
-  void
-  setPackageInfo(QString const& container_id,
-                 QString const& package_name,
-                 QString const& version,
-                 QString const& maintainer,
-                 QString const& description);
+  Q_INVOKABLE void
+  setAppInfo(QString const& container_id,
+             QString const& package_name,
+             QString const& version,
+             QString const& maintainer,
+             QString const& description);
+
+  Q_INVOKABLE void
+  setAppStatus(QString const& container_id,
+               QString const& package_name,
+               ContainerApps::AppStatus app_status);
 
   Q_INVOKABLE QString
   getContainerType(QString const& container_id);
@@ -201,10 +207,16 @@ private:
   int
   getContainerIndex(QString const& container_id);
 
+  ContainerApps*
+  getAppEntry(QString const& container_id,
+              QString const& package_name);
+
 private:
   LibertineConfig const* config_;
   ConfigList             configs_;
   QString                default_container_id_;
 };
+
+Q_DECLARE_METATYPE(ContainerApps::AppStatus)
 
 #endif /* CONTAINER_CONTAINERCONFIGLIST_H */

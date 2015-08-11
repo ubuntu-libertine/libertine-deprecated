@@ -87,6 +87,16 @@ def output_redirector(stream):
         os.close(saved_stdout_fd)
         os.close(saved_stderr_fd)
 
+def process_package_install_error(f):
+    error_msg = ""
+    output = f.getvalue().split(b'\n')
+
+    for line in output:
+        if line.decode().startswith('E: '):
+            error_msg = line.decode().lstrip('E: ')
+
+    return error_msg
+
 def check_lxc_net_entry(entry):
     lxc_net_file = open('/etc/lxc/lxc-usernet')
     found = False
@@ -297,11 +307,7 @@ class LibertineLXC(object):
             self.container.stop()
 
         if retval != 0:
-            lxc_output = f.getvalue().split(b'\n')
-
-            for line in lxc_output:
-                if line.decode().startswith('E: '):
-                    return (False, line.decode().lstrip('E: '))
+            return (False, process_package_install_error(f))
 
         return True
 
@@ -388,7 +394,7 @@ class LibertineChroot(object):
         cmd = subprocess.Popen(args).wait()
 
         # Do an initial apt-get update to initialize the apt cache
-        command_line = "fakechroot fakeroot chroot " + self.chroot_path + "/usr/bin/apt-get update"
+        command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get update"
         args = shlex.split(command_line)
         cmd = subprocess.Popen(args).wait()
 
@@ -402,9 +408,17 @@ class LibertineChroot(object):
         cmd = subprocess.Popen(args).wait()
 
     def install_package(self, package_name):
+        f = io.BytesIO()
         command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get install -y " + package_name
         args = shlex.split(command_line)
-        cmd = subprocess.Popen(args).wait()
+
+        with output_redirector(f):
+            cmd = subprocess.Popen(args).wait()
+
+        if cmd != 0:
+            return (False, process_package_install_error(f))
+
+        return True
 
     def remove_package(self, package_name):
         command_line = "fakechroot fakeroot chroot " + self.chroot_path + " /usr/bin/apt-get remove -y " + package_name
@@ -458,7 +472,7 @@ class LibertineContainer(object):
         self.container.update_libertine_container()
 
     def install_package(self, package_name):
-        self.container.install_package(package_name)
+        return self.container.install_package(package_name)
 
     def remove_package(self, package_name):
         self.container.remove_package(package_name)

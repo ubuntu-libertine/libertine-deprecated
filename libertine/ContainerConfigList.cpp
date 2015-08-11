@@ -284,12 +284,9 @@ getAppIndex(QString const& container_id, QString const& package_name)
 }
 
 
-void ContainerConfigList::
-setPackageInfo(QString const& container_id,
-               QString const& package_name,
-               QString const& version,
-               QString const& maintainer,
-               QString const& description)
+ContainerApps* ContainerConfigList::
+getAppEntry(QString const& container_id,
+            QString const& package_name)
 {
   for (auto const& config: configs_)
   {
@@ -299,17 +296,49 @@ setPackageInfo(QString const& container_id,
       {
         if (app->package_name() == package_name)
         {
-          app->version(version);
-          app->maintainer(maintainer);
-          app->description(description);
-          app->app_status(ContainerApps::AppStatus::Installed);
-
-          save_container_config_list();
-
-          return;
+          return app;
         }
       }
     }
+  }
+
+  return nullptr;
+}
+
+
+void ContainerConfigList::
+setAppInfo(QString const& container_id,
+           QString const& package_name,
+           QString const& version,
+           QString const& maintainer,
+           QString const& description)
+{
+  ContainerApps* app = getAppEntry(container_id, package_name);
+
+  if (app)
+  {
+    app->version(version);
+    app->maintainer(maintainer);
+    app->description(description);
+    app->app_status(ContainerApps::AppStatus::Installed);
+
+    save_container_config_list();
+  }
+}
+
+
+void ContainerConfigList::
+setAppStatus(QString const& container_id,
+             QString const& package_name,
+             ContainerApps::AppStatus app_status)
+{
+  ContainerApps* app = getAppEntry(container_id, package_name);
+
+  if (app)
+  {
+    app->app_status(app_status);
+
+    save_container_config_list();
   }
 }
 

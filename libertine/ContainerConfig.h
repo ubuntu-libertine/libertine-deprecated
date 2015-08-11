@@ -30,6 +30,7 @@ class ContainerApps
 : public QObject
 {
   Q_OBJECT
+  Q_ENUMS(AppStatus)
 
 public:
   enum class AppStatus

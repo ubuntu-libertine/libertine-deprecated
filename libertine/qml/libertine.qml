@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import Libertine 1.0
 import QtQuick 2.4
 import Ubuntu.Components 1.2
 
@@ -44,6 +45,34 @@ MainView {
         }
         else {
             pageStack.push(Qt.resolvedUrl("WelcomeView.qml"))
+        }
+    }
+
+    function finishedPackageInstall(container_id, package_name, result, error_msg) {
+        if (result) {
+            var comp = Qt.createComponent("ContainerManager.qml")
+            var worker = comp.createObject(null, {"containerAction": ContainerManagerWorker.PackageInfo,
+                                                  "containerId": container_id,
+                                                  "containerType": containerConfigList.getContainerType(container_id),
+                                                  "data": package_name})
+            worker.CreateContainerManager()
+            worker.finishedPackageInfo.connect(finishedPackageInfo)
+            worker.start()
+        }
+        else {
+            containerConfigList.setAppStatus(container_id, package_name, ContainerApps.Failed)
+
+            if (pageStack.currentPage.objectName == "appAddView") {
+                pageStack.currentPage.installError(error_msg)
+            }
+        }
+    }
+
+    function finishedPackageInfo(container_id, package_name, version, maintainer, description) {
+        containerConfigList.setAppInfo(container_id, package_name, version, maintainer, description)
+
+        if (pageStack.currentPage.objectName == "appAddView") {
+            pageStack.pop(pageStack.currentPage)
         }
     }
 }
